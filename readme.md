@@ -1,7 +1,7 @@
 # AcademyNet Project Readme
 
 ## Introduction
-AcademyNet is an educational platform developed as part of an academic project for Year 3, Semester 1, 2024. The platform aims to provide a comprehensive environment for online learning, similar to systems like Coursera or Udemy. It supports functionalities for learners, instructors, and administrators, offering an extensive range of courses and a rich user experience across various devices.
+AcademyNet is an educational platform developed as part of an academic project for Year 3, Semester 2, 2024. The platform aims to provide a comprehensive environment for online learning, similar to systems like Coursera or Udemy. It supports functionalities for learners, instructors, and administrators, offering an extensive range of courses and a rich user experience across various devices.
 
 ## Repository Structure
 The project is structured into multiple services, each running independently but interacting through well-defined interfaces. These services include:
