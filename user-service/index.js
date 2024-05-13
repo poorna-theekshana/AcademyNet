@@ -31,7 +31,7 @@ app.use(express.json());
 app.use(cookieParser())
 app.use(
   cors({
-    origin: ["http://localhost:3001"],
+    origin: ["http://localhost:3000"],
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization"],
     methods: ["GET", "POST", "DELETE", "UPDATE", "PUT", "PATCH"],
