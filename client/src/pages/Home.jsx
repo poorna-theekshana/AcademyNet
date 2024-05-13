@@ -6,8 +6,8 @@ import Card from "../components/Card";
 
 const Home = () => {
   const dispatch = useDispatch();
-  const store = useSelector((store) => store.userRoot); // Assuming userRoot has user data
-  const coursesStore = useSelector((store) => store.courseRoot); // Assuming courseRoot has courses data
+  const store = useSelector((store) => store.userRoot);
+  const coursesStore = useSelector((store) => store.courseRoot);
   const [courses, setAllCourses] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -18,10 +18,15 @@ const Home = () => {
 
   useEffect(() => {
     if (coursesStore.allCourse.length !== 0) {
-      setAllCourses(coursesStore.allCourse);
+      console.log(coursesStore.allCourse);
+      const sortedCourses = [...coursesStore.allCourse].sort((a, b) => {
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      });
+      setAllCourses(sortedCourses);
       setIsLoading(false);
     }
   }, [coursesStore.allCourse]);
+
 
   return (
     <>

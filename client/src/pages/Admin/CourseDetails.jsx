@@ -26,6 +26,9 @@ const CourseDetails = (props) => {
           {course.image && (
             <img src={course.image} alt="Course" className="img-fluid mb-3" />
           )}
+          <p>
+            {course.description}
+          </p>
         </div>
 
         {/* Course Details and Video List */}
