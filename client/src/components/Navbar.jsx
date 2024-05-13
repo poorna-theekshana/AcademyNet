@@ -117,6 +117,15 @@ const Navbar = () => {
                   </button>
                 </li>
               )}
+              {user.role === "Admin" && ( // Render only for Admin role
+                <li className="nav-item">
+                  <button type="button" className="btn">
+                    <Link to="/userList">
+                      <li>USER LIST</li>
+                    </Link>
+                  </button>
+                </li>
+              )}
               {(user.role === "Learner" || user.role === "Admin") && (
                 <li className="nav-item">
                   <button type="button" className="btn">
@@ -126,14 +135,6 @@ const Navbar = () => {
                   </button>
                 </li>
               )}
-
-              <li className="nav-item">
-                <button type="button" className="btn">
-                  <Link to="/cart">
-                    <li>CART {cartLength} </li>
-                  </Link>
-                </button>
-              </li>
             </ul>
           </div>
           <div>
