@@ -31,7 +31,7 @@ app.use(express.json());
 app.use(cookieParser())
 app.use(
   cors({
-    origin: ["http://localhost:3000"],
+    origin: ["http://localhost:3001"],
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization"],
     methods: ["GET", "POST", "DELETE", "UPDATE", "PUT", "PATCH"],
@@ -44,6 +44,7 @@ app.use(function (req, res, next) {
     res.header("Access-Control-Allow-Headers", 'Origin,X-Requested-With,Content-Type,Accept,content-type,application/json');
     next();
 });
+
 
 let loggedInUsers = [];
 app.use(morgan('dev'))
@@ -101,7 +102,8 @@ app.post('/register', async (req, res) => {
             email,
             password: hashedPassword,
             avatar,
-            role
+            role,
+            active: true
         });
 
         await newUser.save();
@@ -124,6 +126,12 @@ app.post('/login', async (req, res) => {
 
         if (!user) {
             errors.email = "Email doesn't exist";
+            return res.status(400).json(errors);
+        }
+
+        // Check if the user is active
+        if (!user.active || user.active == null ) {
+            errors.account = "Your account is not active. Please contact support.";
             return res.status(400).json(errors);
         }
 
@@ -158,6 +166,96 @@ app.post('/login', async (req, res) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 });
+
+
+app.put('/users/:userId/deactivate', async (req, res) => {
+    try {
+        const userId = req.params.userId;
+
+        // Find the user by ID
+        const user = await User.findById(userId);
+
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        // Update the active status to false
+        user.active = false;
+
+        // Save the updated user
+        await user.save();
+
+        res.json({ message: 'User deactivated successfully' });
+    } catch (err) {
+        console.error('Error in deactivating user:', err.message);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+
+app.put('/users/:userId/activate', async (req, res) => {
+    try {
+        const userId = req.params.userId;
+
+        // Find the user by ID
+        const user = await User.findById(userId);
+
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        // Update the active status to false
+        user.active = true;
+
+        // Save the updated user
+        await user.save();
+
+        res.json({ message: 'User deactivated successfully' });
+    } catch (err) {
+        console.error('Error in deactivating user:', err.message);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+
+app.get('/api/:userId/users', async (req, res) => {
+    try {
+        // Get the _id of the logged-in user
+        const _id = req.params.userId;
+
+        // Fetch all users from the database except the logged-in user
+        const users = await User.find({ _id: { $ne: _id } });
+        res.json(users);
+    } catch (err) {
+        console.error('Error fetching users:', err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+app.put('/api/users/:userId/role', async (req, res) => {
+    try {
+        const userId = req.params.userId;
+        const { role } = req.body;
+
+        // Validate the role
+        if (!['Admin', 'Instructor', 'Learner'].includes(role)) {
+            return res.status(400).json({ error: 'Invalid role' });
+        }
+
+        // Find the user by ID and update their role
+        const updatedUser = await User.findByIdAndUpdate(userId, { role }, { new: true });
+
+        if (!updatedUser) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        res.json(updatedUser);
+    } catch (err) {
+        console.error('Error updating user role:', err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 
 async function sendEmail(to, OTP, subject) {
     try {
