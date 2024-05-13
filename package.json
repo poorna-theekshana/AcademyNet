@@ -1,0 +1,15 @@
+{
+  "name": "microservices-app",
+  "version": "1.0.0",
+  "scripts": {
+    "start:client": "cd client && npm start",
+    "start:course": "cd course-service && npm start",
+    "start:learner": "cd learner-service && npm start",
+    "start:user": "cd user-service && npm start",
+    "start": "concurrently \"npm run start:client\" \"npm run start:course\" \"npm run start:learner\" \"npm run start:user\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
+
