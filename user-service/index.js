@@ -53,14 +53,14 @@ var channel, connection;
 
 app.use(express.json());
 mongoose.connect(
-    "mongodb+srv://kpamudu:Pamudu12345$@cluster0.vxpwe1n.mongodb.net/dsProject?retryWrites=true&w=majority&appName=Cluster0",
-    {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-    },
-    () => {
-        console.log(`User-Service DB Connected`);
-    }
+  process.env.MONGO_URL,
+  {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  },
+  () => {
+    console.log(`User-Service DB Connected`);
+  }
 );
 
 async function connect() {
