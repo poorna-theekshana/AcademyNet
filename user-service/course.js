@@ -14,7 +14,7 @@ const courseSchema = new Schema({
         type: String,
         required: true
     },
-    file: [String], // Array to store multiple video file URLs
+    file: [String], 
     image: {
         type: String,
         
