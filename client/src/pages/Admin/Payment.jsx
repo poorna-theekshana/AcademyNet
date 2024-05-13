@@ -1,95 +1,95 @@
-import React, { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { useHistory } from 'react-router-dom';
-import { buyCourse } from '../../redux/actions/userAction';
-import Razorpay from 'razorpay';
-import { Link } from 'react-router-dom/cjs/react-router-dom.min';
+import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useHistory } from "react-router-dom";
+import { buyCourse } from "../../redux/actions/userAction";
+import { loadStripe } from "@stripe/stripe-js";
 
 const Payment = (props) => {
-    const history = useHistory();
-    const store = useSelector(store => store.userRoot);
-    const dispatch = useDispatch();
-    const [courseId, setCourseId] = useState("");
-    const [course, setCourse] = useState({});
-    const [showCardDetails, setShowCardDetails] = useState(false);
-    const [cardDetails, setCardDetails] = useState({
-        cardNumber: '',
-        expiryDate: '',
-        cvv: ''
+  const history = useHistory();
+  const store = useSelector((store) => store.userRoot);
+  const dispatch = useDispatch();
+  const [courseId, setCourseId] = useState("");
+  const [course, setCourse] = useState({});
+  const apiURL = `http://localhost:5000`;
+
+  useEffect(() => {
+    setCourseId(props.match.params.courseId);
+  }, [props.match.params.courseId]);
+
+  useEffect(() => {
+    const curr_course = store.user.cart.find((obj) => {
+      return obj._id === props.match.params.courseId;
     });
-    const [validationError, setValidationError] = useState('');
+    setCourse(curr_course);
+  }, []);
 
-    useEffect(() => {
-        setCourseId(props.match.params.courseId);
-    }, [props.match.params.courseId]);
+  console.log(courseId);
 
-    useEffect(() => {
-        const curr_course = store.user.cart.find(obj => {
-            return obj._id === props.match.params.courseId;
-        });
-        setCourse(curr_course);
-    }, []);
+  useEffect(() => {
+    localStorage.setItem("courseIdToBuy", courseId);
+  }, [courseId]);
 
-    const handleClick = () => {
-        setShowCardDetails(true);
+  const clickHandler = (courseId) => {
+    dispatch(buyCourse(courseId, history));
+  };
+
+  const makepayment = async () => {
+    const stripe = await loadStripe(
+      "pk_test_51PEzaQKTplEsuRF9QUQX1R4VlYgMcLxiZvEFI9ZLHTia1VeUas4J3D6pYPdGyFRmQ2h4gh0RXZXOv3Cw6YhT2Ec400xZM8edwd"
+    );
+
+    const body = {
+      course: course,
     };
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setCardDetails({
-            ...cardDetails,
-            [name]: value
-        });
-    };
+    const response = await fetch(`${apiURL}/create-checkout-session`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
 
-    const handlePayment = async () => {
-        // Fake validation for card details
-        if (!cardDetails.cardNumber || !cardDetails.expiryDate || !cardDetails.cvv) {
-            setValidationError('Please fill in all the fields.');
-            return;
-        }
+    if (!response.ok) {
+      const errorResponse = await response.text();
+      console.error("Failed to fetch:", errorResponse);
+      throw new Error("Network response was not ok: " + errorResponse);
+    }
 
-        // Simulate payment success
-        alert('Payment successful!');
+    const session = await response.json();
 
-        // Dispatch buyCourse action
-        dispatch(buyCourse(courseId, history));
-    };
+    const result = await stripe.redirectToCheckout({
+      sessionId: session.id,
+    });
+    if (result.error) {
+      console.error("Error in redirect to checkout:", result.error.message);
+    }
+  };
 
-    return (
-        <>
-            <div className="container" style={{ marginTop: "100px" }}>
-                <div className="row">
-                    <div className="col-md-4 offset-md-4 border">
-                        {course ? <div className="card-body">
-                            <h5 className="card-title">{course.title}</h5>
-                            <h5 className="card-title">Price: {course.price}$</h5>
-                            <h6 className="card-title">Duration: {course.duration} minute</h6>
-                            <h6 className="card-title">Category: {course.category}</h6>
-                            <p className="card-text">{course.description}</p>
-                            {!showCardDetails && (
-                                <button onClick={handleClick} type="button" className="btn btn-primary">Proceed to Pay with Razorpay</button>
-                            )}
-                        </div> : null}
-                    </div>
-                </div>
+  return (
+    <div className="container" style={{ marginTop: "100px" }}>
+      <div className="row">
+        <div className="col-md-4 offset-md-4 border">
+          {course ? (
+            <div class="card-body">
+              <h5 class="card-title">{course.title}</h5>
+              <h5 class="card-title">Price: {course.price}$</h5>
+              <h6 class="card-title">Duration: {course.duration} minute</h6>
+              <h6 class="card-title">Category: {course.category}</h6>
+              <p class="card-text">{course.description}</p>
+              <button
+                onClick={makepayment}
+                type="button"
+                class="btn btn-primary"
+              >
+                Proceed to Pay with Stripe
+              </button>
             </div>
-            {showCardDetails &&
-                <div className="container mt-4">
-                    <div className="row justify-content-center">
-                        <div className="col-md-4 border p-4">
-                            <h2 className="mb-3">Enter Card Details</h2>
-                            <input type="text" name="cardNumber" value={cardDetails.cardNumber} onChange={handleChange} className="form-control mb-3" placeholder="Card Number" />
-                            <input type="text" name="expiryDate" value={cardDetails.expiryDate} onChange={handleChange} className="form-control mb-3" placeholder="Expiry Date" />
-                            <input type="text" name="cvv" value={cardDetails.cvv} onChange={handleChange} className="form-control mb-3" placeholder="CVV" />
-                            {validationError && <div className="text-danger">{validationError}</div>}
-                            <button onClick={handlePayment} className="btn btn-primary">Pay Now</button>
-                        </div>
-                    </div>
-                </div>
-            }
-        </>
-    )
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default Payment;

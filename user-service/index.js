@@ -19,16 +19,24 @@ const validateOTP = require('./validation/otpValidation')
 const validateForgotPassword = require('./validation/forgotPassword')
 const validateUserUpdatePassword = require('./validation/updatePassword')
 const dotenv = require('dotenv');
+dotenv.config();
 const initializePassport = require('./config/passport'); 
 initializePassport(); 
-dotenv.config()
+const stripe = require("stripe")(process.env.STRIPE_SECRET);
 const cors = require('cors')
 const cookieParser = require('cookie-parser');
 const morgan = require('morgan')
 app.use(express.urlencoded({ extended: false }))
 app.use(express.json());
 app.use(cookieParser())
-app.use(cors())
+app.use(
+  cors({
+    origin: ["http://localhost:3000"],
+    credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization"],
+    methods: ["GET", "POST", "DELETE", "UPDATE", "PUT", "PATCH"],
+  })
+);
 app.use(function (req, res, next) {
     res.header("Access-Control-Allow-Origin", '*');
     res.header("Access-Control-Allow-Credentials", true);
@@ -285,99 +293,82 @@ app.post('/updatePassword', passport.authenticate('jwt', { session: false }), as
     }
 });
 
-
-
 // Buy Course
-app.get('/buyCourse/:courseId', passport.authenticate('jwt', { session: false }), async (req, res) => {
+app.post('/buyCourse/:courseId',  async (req, res) => {
     try {
-        const {_id} = req.user;
+        const userId = req.body.userId;
+        const { _id } = userId;
         const { courseId } = req.params;
         const course = await Course.findById(courseId);
+        console.log("course check", course);
+
 
         if (!course) {
             return res.status(404).json({ error: 'Course not found' });
         }
 
-        // Calculate the total price of the course
-        const totalPrice = parseInt(course.price);
+        course.userWhoHasBought.push(userId);
+        await course.save();
 
-        // Create an order with Razorpay
-        const order = await razorpay.orders.create({
-            amount: totalPrice * 100, // Razorpay expects the amount in paise
-            currency: 'INR', // Change this according to your currency
-            receipt: `course_${course._id}`,
-            payment_capture: 1 // Auto capture payment
-        });
-
-        // Now you can send this order ID to your frontend to complete the payment flow
-        // Your frontend should then call Razorpay's SDK to complete the payment
-
-        // Update the user who is buying the course
-        const buyerUser = await User.findById(_id);
+        const buyerUser = await User.findById(userId);
+        if (!buyerUser) {
+          return res.status(404).json({ error: "User not found" });
+        }
         buyerUser.coursesBought.push(courseId);
-        buyerUser.totalExpenditure = (buyerUser.totalExpenditure || 0) + totalPrice;
+        buyerUser.totalExpenditure = (buyerUser.totalExpenditure || 0) + parseInt(course.price);
         await buyerUser.save();
 
         const index = buyerUser.cart.findIndex((courseid) => courseId.toString() === courseid.toString());
         buyerUser.cart.splice(index, 1);  
         await buyerUser.save();
 
-        const buyerUserResponse = await User.findById(_id).populate('coursesCreated').populate('coursesBought').populate('cart');
+        const buyerUserResponse = await User.findById(userId)
+          .populate("coursesCreated")
+          .populate("coursesBought")
+          .populate("cart");
 
-        // Update the seller's total income
         const seller = await User.findById(course.createdBy);
-        seller.totalIncome = (seller.totalIncome || 0) + totalPrice;
+        seller.totalIncome = (seller.totalIncome || 0) + parseInt(course.price);
         await seller.save();
 
-        return res.status(200).json({ order, user: buyerUserResponse });
+        
+        return res.status(200).json({ message: course});
     } catch (err) {
         console.log("error in buyCourse", err.message);
         res.status(400).json({ 'Error in buyCourse': err.message });
     }
 });
 
+app.post("/create-checkout-session", async (req, res) => {
+  const { course } = req.body;
+  
+  try {
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ["card"],
+      line_items: [
+        {
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: course.title,
+              description: course.description,
+              images: [course.image],
+            },
+            unit_amount: course.price * 100,
+          },
+          quantity: 1,
+        },
+      ],
+      mode: "payment",
+      success_url: `http://localhost:3000/payment-success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `http://localhost:3000/home`,
+    });
 
-app.get('/razorpayOrders', async (req, res) => {
-    try {
-        // Fetch all orders from Razorpay
-        const orders = await razorpay.orders.all();
-
-        // Return the orders as JSON response
-        res.status(200).json({orders});
-    } catch (error) {
-        console.error('Error fetching Razorpay orders:', error);
-        res.status(500).json({ error: 'Internal server error' });
-    }
-});
-
-
-app.post('/refundOrder/:orderId', async (req, res) => {
-    try {
-        const { orderId } = req.params;
-
-        // Make an API call to Razorpay refund endpoint
-        const refundResponse = await axios.post(`https://api.razorpay.com/v1/payments/${orderId}/refund`, {
-            amount: 5000,  // Refund amount in paise
-            speed: 'normal'  // Refund speed
-        }, {
-            auth: {
-                username: 'rzp_test_VeJyusQck4J2MV',
-                password: 'zWXLwM76hLujfIEhwJ9OL7Xl'
-            }
-        });
-
-        // Check if the refund was successful
-        if (refundResponse.data.status === 'processed') {
-            // Refund was successful
-            res.status(200).json({ success: true, message: 'Order refunded successfully' });
-        } else {
-            // Refund failed
-            res.status(400).json({ success: false, message: 'Order refund failed' });
-        }
-    } catch (error) {
-        console.error('Error refunding order:', error);
-        res.status(500).json({ error: 'Internal server error' });
-    }
+    res.json({ id: session.id });
+  } catch (err) {
+    console.error("Stripe Checkout Session creation failed:", err);
+    res.status(500).send({ error: err.message });
+  }
 });
 
 
