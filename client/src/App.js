@@ -33,6 +33,7 @@ import NotApprovedCourseList from './pages/Admin/NotApprovedCourseList';
 import UserDetailList from './pages/Admin/UserDetailList';
 import RazorPayments from './pages/Admin/RazorPayments';
 import PaymentSuccess from './components/PaymentSuccess';
+import UserList from './pages/Admin/UserList';
 
 
 if (window.localStorage.userJwtToken) {
@@ -79,6 +80,7 @@ function App() {
           <Route exact path="/learnerProgress" component={UserDetailList} />
           <Route exact path="/transactions" component={RazorPayments} />
           <Route path="/payment-success" component={PaymentSuccess} />
+          <Route path="/userList" component={UserList} />
        
         </Switch>
       </Router>
