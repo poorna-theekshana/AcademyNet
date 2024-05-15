@@ -126,11 +126,20 @@ const Navbar = () => {
                   </button>
                 </li>
               )}
-              {(user.role === "Learner" || user.role === "Admin") && (
+              {user.role === "Learner" && (
                 <li className="nav-item">
                   <button type="button" className="btn">
                     <Link to="/myCourses">
                       <li>MY COURSES {courseLength} </li>
+                    </Link>
+                  </button>
+                </li>
+              )}
+              {user.role === "Learner" && (
+                <li className="nav-item">
+                  <button type="button" className="btn">
+                    <Link to="/cart">
+                      <li> CART {cartLength} </li>
                     </Link>
                   </button>
                 </li>
