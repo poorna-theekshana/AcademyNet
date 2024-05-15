@@ -52,12 +52,6 @@ app.use(morgan('dev'))
 
 app.use(passport.initialize()); 
 
-const razorpay = new Razorpay({
-    key_id: 'rzp_test_VeJyusQck4J2MV',
-    key_secret: 'zWXLwM76hLujfIEhwJ9OL7Xl'
-});
-
-
 var channel, connection;
 
 app.use(express.json());
@@ -167,7 +161,7 @@ app.post('/login', async (req, res) => {
     }
 });
 
-
+// ADMIN
 app.put('/users/:userId/deactivate', async (req, res) => {
     try {
         const userId = req.params.userId;
@@ -192,7 +186,7 @@ app.put('/users/:userId/deactivate', async (req, res) => {
     }
 });
 
-
+//ADMIN
 app.put('/users/:userId/activate', async (req, res) => {
     try {
         const userId = req.params.userId;
@@ -217,7 +211,7 @@ app.put('/users/:userId/activate', async (req, res) => {
     }
 });
 
-
+//ADMIN
 app.get('/api/:userId/users', async (req, res) => {
     try {
         // Get the _id of the logged-in user
@@ -232,6 +226,7 @@ app.get('/api/:userId/users', async (req, res) => {
     }
 });
 
+//ADMIN
 app.put('/api/users/:userId/role', async (req, res) => {
     try {
         const userId = req.params.userId;

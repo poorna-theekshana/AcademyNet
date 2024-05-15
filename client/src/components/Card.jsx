@@ -68,7 +68,8 @@ const Card = (props) => {
           <strong>Description: </strong>
           {limitDescription(props.course.description)}
         </p>
-        {store.user._id !== props.course.createdBy._id ? (
+        {store.user._id !== props.course.createdBy._id &&
+        store.user.role != "Admin" ? (
           <button
             disabled={isDisabled}
             onClick={addToCartClickHandler}

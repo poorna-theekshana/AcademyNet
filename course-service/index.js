@@ -115,7 +115,7 @@ app.get('/getAllCourse', passport.authenticate('jwt', { session: false }), async
 });
 
 
-// All Courses
+// NON APPROVED COURSES
 app.get('/getAllCourseNot', passport.authenticate('jwt', { session: false }), async (req, res) => {
     try {
         const { _id } = req.user;
@@ -295,52 +295,6 @@ app.delete('/deleteCourseVideo/:courseId/:videoIndex', passport.authenticate('jw
         res.status(400).json({ error: 'Error in deleteCourseVideo', message: err.message });
     }
 });
-
-
-// app.put('/updateCourse/:courseId', passport.authenticate('jwt', { session: false }), upload.single('file'), async (req, res) => {
-//     try {
-//         const { _id } = req.user;
-//         const { courseId } = req.params;
-//         const { title, category, description, price } = req.body;
-
-//         // Find the course by ID
-//         let course = await Course.findById(courseId);
-
-//         // Check if the course exists
-//         if (!course) {
-//             return res.status(404).json({ error: 'Course not found' });
-//         }
-
-//         // Check if a new video file is uploaded
-//         let fileUrl;
-//         if (req.file) {
-//             const convertedBuffer = await bufferConversion(req.file.originalname, req.file.buffer);
-//             const uploadedVideo = await cloudinary.uploader.upload(convertedBuffer, { resource_type: "video" });
-//             fileUrl = uploadedVideo.secure_url;
-//             // Update the duration if needed
-//             course.duration = (uploadedVideo.duration / 60).toFixed(2);
-//         }
-
-//         // Update course details
-//         course.title = title;
-//         course.category = category;
-//         course.description = description;
-//         course.price = price;
-
-//         // Update video file URL if a new file is uploaded
-//         if (fileUrl) {
-//             course.file = fileUrl;
-//         }
-
-//         // Save the updated course
-//         await course.save();
-
-//         res.status(200).json({ message: 'Course updated successfully', course });
-//     } catch (err) {
-//         console.log("Error in updateCourse", err.message);
-//         res.status(400).json({ error: 'Error in updateCourse', message: err.message });
-//     }
-// });
 
 app.post('/createQuiz', passport.authenticate('jwt', { session: false }), async (req, res) => {
     try {
@@ -522,12 +476,6 @@ app.get('/user/details', passport.authenticate('jwt', { session: false }), async
         res.status(500).json({ message: 'Internal server error' });
     }
 });
-
-
-
-
-
-
 
 app.listen(PORT, () => {
     console.log(`Course-Service at ${PORT}`);

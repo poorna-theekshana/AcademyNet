@@ -21,7 +21,7 @@ function UserList() {
 
   const toggleUserStatus = async (userId, newStatus) => {
     try {
-      await axios.put(`http://localhost:5000/api/users/${userId}/${newStatus ? 'activate' : 'deactivate'}`); // Change the API endpoint accordingly
+      await axios.put(`http://localhost:5000/users/${userId}/${newStatus ? 'activate' : 'deactivate'}`); // Change the API endpoint accordingly
       // Update the local state to reflect the updated user status
       setUsers(users.map(user => {
         if (user._id === userId) {
